@@ -33,7 +33,7 @@ void push(struct stack* stack, int new) {
     
     stack->topIndex++;
     stack->arr[stack->topIndex] = new; 
-    //printf("%c pushed to stack\n", new); 
+    printf("%d pushed to stack\n", new); 
 
 } 
   
@@ -51,14 +51,14 @@ int pop(struct stack* stack) {
 struct queue {
     int topIndex;
     int bottomIndex;
-    char* arr;
+    int* arr;
 };
 
 struct queue* newQueue() { 
     struct queue* queue = (struct queue*)malloc(sizeof(struct queue)); 
     queue->topIndex = 0; 
     queue->bottomIndex = 0;
-    queue->arr = (char*)malloc(MAX_SIZE * sizeof(char)); 
+    queue->arr = (int*)malloc(MAX_SIZE * sizeof(int)); 
     return queue; 
 } 
 
@@ -70,18 +70,18 @@ int isQueueEmpty(struct queue* queue) {
     return queue->topIndex == queue->bottomIndex; 
 } 
   
-void enqueue(struct queue* queue, char c) { 
+void enqueue(struct queue* queue, int new) { 
     if (isQueueFull(queue)) {
         printf("queue is full");
         return; 
     }
     
-    queue->arr[queue->topIndex] = c; 
+    queue->arr[queue->topIndex] = new; 
     queue->topIndex++;
-    //printf("%c added to queue\n", c); 
+    printf("%d added to queue\n", new); 
 } 
   
-char dequeue(struct queue* queue) { 
+int dequeue(struct queue* queue) { 
     if (isQueueEmpty(queue)) {
         printf("queue is empty\n"); 
         return 'E'; 
@@ -91,33 +91,14 @@ char dequeue(struct queue* queue) {
     
 } 
 
-int calculate(char* expression) {
-    struct stack* operatorStack = newStack(); 
-    struct queue* outputQueue = newQueue();
-
-    for(int i = 0; expression[i] != '\0'; i++) {
-
-        if(expression[i] != ' ') {
-            if(isdigit(expression[i])) {
-                enqueue(outputQueue, expression[i] - '0');
-            }
-            else {
-                push(operatorStack, expression[i]);
-            }
-        }
-    }
-
-    while(!isStackEmpty(operatorStack)) {
-        enqueue(outputQueue, pop(operatorStack));
-    }
-
+int evaluate(struct queue* outputQueue) {
     struct stack* evalStack = newStack(); 
     
-    char c;
+    int c;
 
     while(!isQueueEmpty(outputQueue)) {
         c = dequeue(outputQueue);
-        printf("%c", c);
+        printf("%d", c);
 
         if(c == '+'){
             push(evalStack, pop(evalStack) + pop(evalStack));
@@ -132,9 +113,44 @@ int calculate(char* expression) {
             push(evalStack, c);
         } 
     }
-
-
+    
     return pop(evalStack);
+}
+
+int calculate(char* expression) {
+    struct stack* operatorStack = newStack(); 
+    struct queue* outputQueue = newQueue();
+
+    while(*expression != '\0') {
+        // printf("%d", *expression);
+        if(*expression != ' ') {
+            if(isdigit(*expression)) {
+                int num = atoi(expression); // atoi converts until it finds a non-digit symbol
+                while(isdigit(*expression)) {
+                    expression++;
+                }
+                enqueue(outputQueue, num);
+                //enqueue(outputQueue, *expression);
+            }
+            else {
+                push(operatorStack, *expression);
+                expression++;
+            }
+        }
+        else {
+            expression++;
+        }
+        
+    }
+
+    while(!isStackEmpty(operatorStack)) {
+        enqueue(outputQueue, pop(operatorStack));
+    }
+
+
+    printf("end of parsing\n");
+    return evaluate(outputQueue);
+    
 }
 
 int main() {
@@ -142,8 +158,6 @@ int main() {
     while(strcmp(input, "exit") != 0) {
         fgets(input, 1000, stdin);
         strtok(input, "\n"); // removes trailing \n 
-        // input += '\0';
-        // input = "1 + 2";
         printf("\n%d\n", calculate(input));
     }
 
