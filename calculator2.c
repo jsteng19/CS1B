@@ -14,7 +14,6 @@ int calculate(char* expression) {
     struct deque* outputQueue = newDeque();
 
     while(*expression != '\0') {
-        // printf("%d", *expression);
         if(*expression != ' ') {
             if(isdigit(*expression)) {
                 int num = atoi(expression); // atoi converts until it finds a non-digit symbol
@@ -28,8 +27,13 @@ int calculate(char* expression) {
                     push(operatorStack, newTokenNode(*expression, true));
                 }
                 else if(*expression == ')') {
-                    while(!isEmpty(operatorStack) && peek(operatorStack)->data != '(') {
-                        enqueue(outputQueue, pop(operatorStack));
+                    while(!isEmpty(operatorStack)) {
+
+                        struct tokenNode* n = pop(operatorStack);
+                        if(n->data == '(') {
+                            break;
+                        }
+                        enqueue(outputQueue, n);
                     }
 
                     if(isEmpty(operatorStack)) {
@@ -37,8 +41,6 @@ int calculate(char* expression) {
                         return 0; // no matching left parenthesis, invalid expression
                     }
 
-                    pop(operatorStack); // discard both parenthesis
-                    //printf("after pop: %d\n", peek(operatorStack)->data);
                 }
 
                 else { // assume token is valid operator
@@ -60,9 +62,7 @@ int calculate(char* expression) {
     while(!isEmpty(operatorStack)) {
         enqueue(outputQueue, pop(operatorStack));
     }
-    
-    printDeque(outputQueue);
-    printf("end of parsing\n");
+
     return evaluate(outputQueue);   
 }
 
@@ -74,7 +74,6 @@ int evaluate(struct deque* outputQueue) {
     while(!isEmpty(outputQueue)) {
         token = pop(outputQueue);
         
-        //printf("%d", c);
         if(token->isOperator) {
             int data = token->data;
             int operand2 = pop(evalStack)->data;
@@ -89,7 +88,8 @@ int evaluate(struct deque* outputQueue) {
             else if(data == '*'){
                 res = operand1 * operand2;
             }
-            else { // symbol not recognized
+            else {
+                printf("invalid input");
                 return 0;
             }
             push(evalStack, newTokenNode(res, false));
@@ -125,15 +125,6 @@ int main() {
         printf("\n%d\n", calculate(input));
     }
 
-    // struct deque* d = newDeque();
-    // push(d, newTokenNode('(', true));
-    // push(d, newTokenNode('(', true));
-
-    // printf("prev: %p\n", peek(d)->prev);
-    // printf("prev data: %d\n", peek(d)->prev->data);
-    // printf("%d\n", pop(d)->data);
-    
-    // printf("%d\n", pop(d)->data);
-    // return 0;
+    return 0;
 
 }
