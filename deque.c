@@ -13,7 +13,8 @@ struct tokenNode* newTokenNode(int data, bool isOperator) {
     struct tokenNode* n = (struct tokenNode*) malloc(sizeof(struct tokenNode));
     n->data = data;
     n->isOperator = isOperator;
-    n->next = n->prev = NULL;
+    n->next = NULL;
+    n->prev = NULL;
 
     return n;
 }
@@ -35,6 +36,8 @@ bool isEmpty(struct deque* d) {
 
 void push(struct deque* d, struct tokenNode* new) {
 
+    new->prev = new->next = NULL;
+    
     if(d->tail) {
         d->tail->next = new;
         new->prev = d->tail;
@@ -54,9 +57,11 @@ struct tokenNode* pop(struct deque* d) {
     struct tokenNode* popped = d->tail;
     if(d->tail->prev) {
         d->tail = d->tail->prev;
+        d->tail->next = NULL;
     }
     else {
-        d->head = d->tail = NULL;
+        d->head = NULL;
+        d->tail = NULL;
     }
     
     return popped;
@@ -72,6 +77,7 @@ struct tokenNode* peek(struct deque* d) {
 
 void enqueue(struct deque* d, struct tokenNode* new) {
 
+    new->prev = new->next = NULL;
     if(d->head) {
         d->head->prev = new;
         new->next = d->head;
