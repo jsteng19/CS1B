@@ -21,6 +21,8 @@ int main(int argc, char** argv) {
     struct stat st;
     stat(filename, &st);
     off_t size = st.st_size;
+    size_t sizet = (size_t)size;
+    printf("size: %u\n", sizet);
     fread(memory, 1, size, file);
 
     uint32_t registers[32] = {0};
@@ -32,11 +34,9 @@ int main(int argc, char** argv) {
         unsigned char* rA = memory + *pc + 1;
         unsigned char* rB = memory + *pc + 2;
         unsigned char* rC = memory + *pc + 3;
-        printf("%x\n", memory[*pc]);
         
         switch(memory[*pc]) {
             case 0x00: //NOP
-                printf("nop");
                 break;
                 
             case 0x01: 
@@ -64,40 +64,40 @@ int main(int argc, char** argv) {
                 break; 
 
             case 0x07:
-                if((int32_t)rC > 0) {
-                    registers[*rA] = registers[*rB] << registers[*rC];
+                if((int32_t)registers[*rC] > 0) {
+                    registers[*rA] = registers[*rB] << (int32_t)registers[*rC];
                 }
                 else {
-                    registers[*rA] = registers[*rB] >> registers[*rC];
+                    registers[*rA] = registers[*rB] >> abs((int32_t)registers[*rC]);
                 }    
                 break; 
 
             case 0x08:
                 if((int32_t)rC > 0) {
-                    registers[*rA] = registers[*rB] << registers[*rC];
+                    registers[*rA] = (int32_t)registers[*rB] << (int32_t)registers[*rC];
                 }
                 else {
-                    *rA = ((int32_t)registers[*rB]) >> registers[*rC];
+                    *rA = ((int32_t)registers[*rB]) >> abs((int32_t)registers[*rC]);
                 } 
                 break;
 
             case 0x09: {
-                uint32_t sub = registers[*rB] - registers[*rC];
+                int32_t sub = registers[*rB] - registers[*rC];
                 registers[*rA] = (sub > 0) - (sub < 0);
                 break; 
             }
 
             case 0x0A: {
-                uint32_t sub = ((int32_t)registers[*rB]) - ((int32_t)registers[*rC]);
+                int32_t sub = ((int32_t)registers[*rB]) - ((int32_t)registers[*rC]);
                 registers[*rA] = (sub > 0) - (sub < 0);
                 break; 
             }
 
-            case 0x0B: {
-                printf("set");
-                int16_t* imm;
-                memcpy(imm, rB, 2);
-                *rA = (int32_t)*imm;
+            case 0x0B: { //set
+                memcpy(registers + *rA, rB, 2);
+                int16_t imm = registers[*rA];
+                // printf("setting %d to %d\n", *rA, imm);
+                registers[*rA] = (int32_t)imm;
                 break; 
             }
 
@@ -106,12 +106,12 @@ int main(int argc, char** argv) {
                 break; 
 
             case 0x0D:
-                // current-implemenation-defined behavior: copy 32 bit word even if not word-aligned in memory
+                // current-implementation-defined behavior: copy 32 bit word even if not word-aligned in memory
                 memcpy(registers + *rA, memory + registers[*rB], 4);
                 break;
 
             case 0x0E:
-                // current-implemenation-defined behavior: copy 32 bit word even if not word-aligned in memory
+                // current-implementation-defined behavior: copy 32 bit word even if not word-aligned in memory
                 memcpy(memory + registers[*rA], registers + *rB, 4);
                 break; 
 
@@ -121,14 +121,19 @@ int main(int argc, char** argv) {
 
             case 0x10:
                 memcpy(memory + registers[*rA], registers + *rB, 1);
+
+            default:
+                break;
         }
         
         *pc += 4;
     }
 
     for(int i = 0; i < 32; i++) {
-        printf("register %d: %u\n", i, registers[i]);
+        printf("register %d: %d\n", i, (int32_t)registers[i]);
     }
+
+
 
 
     return 0;
