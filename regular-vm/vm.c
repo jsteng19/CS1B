@@ -5,16 +5,17 @@
 #include <sys/stat.h>
 
 
-int main() {
-    int memsize = 100000;
-    
+int main(int argc, char** argv) {
 
-    int numInstructions;
-    char* memory = (char*)malloc(sizeof(char*) * memsize); // = {"A"};  does memory need to be 0-initialized?
+    if(argc != 2) {
+        printf("Error: incorrect command line arguments");
+        return 1;
+    }
+    const char* filename = argv[1];
+    int memsize = 100000;
+    unsigned char* memory = (unsigned char*)malloc(sizeof(unsigned char*) * memsize);
     memset((void*)memory, 0x00, memsize);
-    //memcpy(*memory, *instructions, sizeof(instructions));
     
-    const char* filename = "instructions";
     FILE *file = fopen(filename, "rb");
 
     struct stat st;
@@ -23,103 +24,112 @@ int main() {
     fread(memory, 1, size, file);
 
     uint32_t registers[32] = {0};
-    
-    uint32_t instruction;
+
     uint32_t* pc = &registers[0];
 
-    while(registers[0] > 0 && registers[0] < numInstructions) {
-        instruction = memory[*pc];
-        uint32_t* rA = &registers[memory[*pc + 1]];
-        uint32_t* rB = &registers[memory[*pc + 2]];
-        uint32_t* rC = &registers[memory[*pc + 3]];
-
-
-                switch(instruction) {
-            case 0x00:
+    while(memory[*pc] != 0xFF) {
+        
+        unsigned char* rA = memory + *pc + 1;
+        unsigned char* rB = memory + *pc + 2;
+        unsigned char* rC = memory + *pc + 3;
+        printf("%x\n", memory[*pc]);
+        
+        switch(memory[*pc]) {
+            case 0x00: //NOP
+                printf("nop");
                 break;
                 
-            case 0x01:
-                *rA = *rB + *rC;
+            case 0x01: 
+                registers[*rA] = registers[*rB] + registers[*rC];
                 break;
 
             case 0x02:
-                *rA = *rB - *rC;    
+                registers[*rA] = registers[*rB] - registers[*rC];    
                 break;
 
             case 0x03:
-                *rA = *rB & *rC;    
+                registers[*rA] = registers[*rB] & registers[*rC];
                 break;
 
             case 0x04:
-                *rA = *rB | *rC;    
+                registers[*rA] = registers[*rB] | registers[*rC]; 
                 break; 
 
             case 0x05:
-                *rA = *rB ^ *rC;    
+                registers[*rA] = registers[*rB] ^ registers[*rC]; 
                 break; 
 
             case 0x06:
-                *rA = ~*rB;    
+                registers[*rA] = ~registers[*rB];    
                 break; 
 
             case 0x07:
                 if((int32_t)rC > 0) {
-                    *rA = *rB << *rC;
+                    registers[*rA] = registers[*rB] << registers[*rC];
                 }
                 else {
-                    *rA = *rB >> *rC;
+                    registers[*rA] = registers[*rB] >> registers[*rC];
                 }    
                 break; 
 
             case 0x08:
                 if((int32_t)rC > 0) {
-                    *rA = *rB << *rC;
+                    registers[*rA] = registers[*rB] << registers[*rC];
                 }
                 else {
-                    *rA = ((int32_t)*rB) >> *rC;
+                    *rA = ((int32_t)registers[*rB]) >> registers[*rC];
                 } 
-                break; 
+                break;
 
-            case 0x09:
-                uint32_t sub = *rB - *rC;
-                *rA = (sub > 0) - (sub < 0);
+            case 0x09: {
+                uint32_t sub = registers[*rB] - registers[*rC];
+                registers[*rA] = (sub > 0) - (sub < 0);
                 break; 
+            }
 
-            case 0x0A:
-                uint32_t sub = ((int32_t)*rB) - ((int32_t)*rC);
-                *rA = (sub > 0) - (sub < 0);
+            case 0x0A: {
+                uint32_t sub = ((int32_t)registers[*rB]) - ((int32_t)registers[*rC]);
+                registers[*rA] = (sub > 0) - (sub < 0);
                 break; 
+            }
 
-            case 0x0B:
+            case 0x0B: {
+                printf("set");
                 int16_t* imm;
                 memcpy(imm, rB, 2);
-                rA = (int32_t)imm;
+                *rA = (int32_t)*imm;
                 break; 
+            }
 
             case 0x0C:
-                *rA = *rB;
+                registers[*rA] = registers[*rB];
                 break; 
 
             case 0x0D:
                 // current-implemenation-defined behavior: copy 32 bit word even if not word-aligned in memory
-                memcpy(rA, memory + *rB, 4);
+                memcpy(registers + *rA, memory + registers[*rB], 4);
                 break;
 
             case 0x0E:
                 // current-implemenation-defined behavior: copy 32 bit word even if not word-aligned in memory
-                memcpy(memory + *rA, rB, 4);
+                memcpy(memory + registers[*rA], registers + *rB, 4);
                 break; 
 
             case 0x0F:
-                memcpy(rA, memory + *rB, 1);
+                memcpy(registers + *rA, memory + registers[*rB], 1);
                 break; 
 
             case 0x10:
-                memcpy(memory + *rA, rB, 1);
+                memcpy(memory + registers[*rA], registers + *rB, 1);
         }
         
-        pc += 4;
+        *pc += 4;
     }
-    return 0;
 
+    for(int i = 0; i < 32; i++) {
+        printf("register %d: %u\n", i, registers[i]);
+    }
+
+
+    return 0;
 }
