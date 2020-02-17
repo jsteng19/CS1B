@@ -1,0 +1,29 @@
+set r1 25
+set r2 1
+tcs at r1 r2
+set r29 2
+ash at at r29set r29 8
+add at at r29
+add pc pc at
+set pc 44
+set pc 52
+set pc 60
+set r5 0
+brk
+set r5 1
+brk
+set r3 0
+set r4 1
+add r5 r4 r3
+sub r1 r1 r2
+tcs at r1 r2
+set r29 3
+ash at at r29
+set r29 8
+add at at r29
+add pc pc at
+nop
+brk
+mov r3 r4
+mov r4 r5
+set pc 68

@@ -16,3 +16,5 @@
 #define STW 0x0E
 #define LDB 0x0F
 #define STB 0x10
+#define BRK 0xFF
+

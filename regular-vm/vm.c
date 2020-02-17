@@ -21,21 +21,23 @@ int main(int argc, char** argv) {
     struct stat st; // or lseek
     stat(filename, &st);
     off_t size = st.st_size;
-    fread(memory, 1, size, file);
+    fread(memory + 4, 1, size, file);
 
     uint32_t registers[32] = {};
     uint32_t* pc = registers;
     uint32_t* sp = registers + 31; 
-    *sp = size; // Todo: find a way to avoid this
+    *sp = size + 4; // Todo: find a way to avoid this
 
 
-    while(memory[*pc] != 0xFF) {
-        
+    while(memory[*pc + 4] != BRK) {
+        *pc += 4;
+
         unsigned char* rA = memory + *pc + 1;
         unsigned char* rB = memory + *pc + 2;
         unsigned char* rC = memory + *pc + 3;
         
         switch(memory[*pc]) {
+            
             case NOP: 
                 break;
                 
@@ -73,11 +75,11 @@ int main(int argc, char** argv) {
                 break; 
 
             case ASH:
-                if((int32_t)rC > 0) {
+                if((int32_t)registers[*rC] > 0) {
                     registers[*rA] = (int32_t)registers[*rB] << (int32_t)registers[*rC];
                 }
                 else {
-                    *rA = ((int32_t)registers[*rB]) >> abs((int32_t)registers[*rC]);  // or negative
+                    *rA = ((int32_t)registers[*rB]) >> -(int32_t)registers[*rC];
                 } 
                 break;
 
@@ -94,13 +96,10 @@ int main(int argc, char** argv) {
             }
 
             case SET: { 
-                memcpy(registers + *rA, rB, 2); // or rB and rC
-                int16_t imm = registers[*rA];
-                registers[*rA] = (int32_t)imm;
-                
-                uint16_t left = ((uint16_t)(*rB)) << 8;
-                uint16_t right = (uint16_t)(*rC);
-                registers[*rA] = (uint32_t)(left | right);
+            
+                uint16_t left = (uint16_t)(*rB);
+                uint16_t right = (uint16_t)(*rC) << 8;
+                registers[*rA] = (int32_t)(left | right);
                 break; 
             }
 
@@ -128,17 +127,15 @@ int main(int argc, char** argv) {
             default:
                 break;
         }
-        
-        *pc += 4;
+
+        for(int i = 0; i < 32; i++) {
+            printf("register %d: %d\n", i, (int32_t)registers[i]);
+        }
+        printf("\n");
     }
 
     // printf("%d\n", *sp);
-    for(int i = 0; i < 32; i++) {
-        printf("register %d: %d\n", i, (int32_t)registers[i]);
-    }
-
-
-
-
+    
+    fclose(file);
     return 0;
 }

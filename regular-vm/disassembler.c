@@ -4,6 +4,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <math.h>
+#include "opcodes.h"
 
 char* getRegisterName(char byte);
 
@@ -21,7 +22,6 @@ int main(int argc, char** argv) {
     off_t size = st.st_size;
 
     unsigned char* mcode = (unsigned char*)malloc(sizeof(unsigned char*) * size);
-    // memset((void*)mcode, 0x00, size);
     FILE *file = fopen(filename, "rb");
 
     fread(mcode, 1, size, file);
@@ -38,94 +38,95 @@ int main(int argc, char** argv) {
         char* imm = NULL;
 
         switch(mcode[i]) {
-            case 0x00: 
-            instructiontype = 0;
+            case NOP: 
                 token = "nop ";
+                instructiontype = 0;
                 break;
                 
-            case 0x01: 
+            case ADD: 
                 token = "add ";
                 instructiontype = 3;
                 break;
 
-            case 0x02:
+            case SUB:
                 token = "sub ";  
                 instructiontype = 3;
                 break;
 
-            case 0x03:
+            case AND:
                 token = "and ";
                 instructiontype = 3;
                 break;
 
-            case 0x04:
+            case ORR:
                 token = "orr "; 
                 instructiontype = 3;
                 break; 
 
-            case 0x05:
+            case XOR:
                 token = "xor ";
                 instructiontype = 3;
                 break; 
 
-            case 0x06:
+            case NOT:
                 token = "not ";  
                 instructiontype = 2;
                 break; 
 
-            case 0x07:
+            case LSH:
                 token = "lsh ";
                 instructiontype = 3;
                 break; 
 
-            case 0x08:
+            case ASH:
                 token = "ash ";
                 instructiontype = 3;
                 break;
 
-            case 0x09: {
+            case TCU: {
                 token = "tcu ";
                 instructiontype = 3;
                 break;
             }
 
-            case 0x0A: {
+            case TCS: {
                 token = "tcs ";
                 instructiontype = 3;
                 break;
             }
 
-            case 0x0B: { 
+            case SET: { 
                 token = "set ";
                 instructiontype = 1;
                 break; 
             }
 
-            case 0x0C:
+            case MOV:
                 token = "mov ";
                 instructiontype = 2;
                 break; 
 
-            case 0x0D:
+            case LDW:
                 token = "ldw ";
                 instructiontype = 2;
                 break;
 
-            case 0x0E:
+            case STW:
                 token = "stw ";
                 instructiontype = 2;
                 break; 
 
-            case 0x0F:
+            case LDB:
                 token = "ldb ";
                 instructiontype = 2;
                 break; 
 
-            case 0x10:
+            case STB:
                 token = "stb ";
                 instructiontype = 2;
+                break;
 
-            case 0xff:
+            case BRK:
                 token = "brk ";
                 instructiontype = 0;
 
@@ -169,7 +170,7 @@ int main(int argc, char** argv) {
     }
 
     printf("%s\n", assembly);
-
+    fclose(file);
     return 0;
 }
 
