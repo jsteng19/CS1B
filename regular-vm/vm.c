@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include "opcodes.h"
 
 
 int main(int argc, char** argv) {
@@ -13,21 +14,20 @@ int main(int argc, char** argv) {
     }
     const char* filename = argv[1];
     int memsize = 100000;
-    unsigned char* memory = (unsigned char*)malloc(sizeof(unsigned char*) * memsize);
-    memset((void*)memory, 0x00, memsize);
+    unsigned char* memory = (unsigned char*)calloc(memsize, 1);
     
     FILE *file = fopen(filename, "rb");
 
-    struct stat st;
+    struct stat st; // or lseek
     stat(filename, &st);
     off_t size = st.st_size;
-    size_t sizet = (size_t)size;
-    printf("size: %u\n", sizet);
     fread(memory, 1, size, file);
 
-    uint32_t registers[32] = {0};
+    uint32_t registers[32] = {};
+    uint32_t* pc = registers;
+    uint32_t* sp = registers + 31; 
+    *sp = size; // Todo: find a way to avoid this
 
-    uint32_t* pc = &registers[0];
 
     while(memory[*pc] != 0xFF) {
         
@@ -36,34 +36,34 @@ int main(int argc, char** argv) {
         unsigned char* rC = memory + *pc + 3;
         
         switch(memory[*pc]) {
-            case 0x00: //NOP
+            case NOP: 
                 break;
                 
-            case 0x01: 
+            case ADD: 
                 registers[*rA] = registers[*rB] + registers[*rC];
                 break;
 
-            case 0x02:
+            case SUB:
                 registers[*rA] = registers[*rB] - registers[*rC];    
                 break;
 
-            case 0x03:
+            case AND:
                 registers[*rA] = registers[*rB] & registers[*rC];
                 break;
 
-            case 0x04:
+            case ORR:
                 registers[*rA] = registers[*rB] | registers[*rC]; 
                 break; 
 
-            case 0x05:
+            case XOR:
                 registers[*rA] = registers[*rB] ^ registers[*rC]; 
                 break; 
 
-            case 0x06:
+            case NOT:
                 registers[*rA] = ~registers[*rB];    
                 break; 
 
-            case 0x07:
+            case LSH:
                 if((int32_t)registers[*rC] > 0) {
                     registers[*rA] = registers[*rB] << (int32_t)registers[*rC];
                 }
@@ -72,54 +72,57 @@ int main(int argc, char** argv) {
                 }    
                 break; 
 
-            case 0x08:
+            case ASH:
                 if((int32_t)rC > 0) {
                     registers[*rA] = (int32_t)registers[*rB] << (int32_t)registers[*rC];
                 }
                 else {
-                    *rA = ((int32_t)registers[*rB]) >> abs((int32_t)registers[*rC]);
+                    *rA = ((int32_t)registers[*rB]) >> abs((int32_t)registers[*rC]);  // or negative
                 } 
                 break;
 
-            case 0x09: {
+            case TCU: {
                 int32_t sub = registers[*rB] - registers[*rC];
                 registers[*rA] = (sub > 0) - (sub < 0);
                 break; 
             }
 
-            case 0x0A: {
+            case TCS: {
                 int32_t sub = ((int32_t)registers[*rB]) - ((int32_t)registers[*rC]);
                 registers[*rA] = (sub > 0) - (sub < 0);
                 break; 
             }
 
-            case 0x0B: { //set
-                memcpy(registers + *rA, rB, 2);
+            case SET: { 
+                memcpy(registers + *rA, rB, 2); // or rB and rC
                 int16_t imm = registers[*rA];
-                // printf("setting %d to %d\n", *rA, imm);
                 registers[*rA] = (int32_t)imm;
+                
+                uint16_t left = ((uint16_t)(*rB)) << 8;
+                uint16_t right = (uint16_t)(*rC);
+                registers[*rA] = (uint32_t)(left | right);
                 break; 
             }
 
-            case 0x0C:
+            case MOV:
                 registers[*rA] = registers[*rB];
                 break; 
 
-            case 0x0D:
+            case LDW:
                 // current-implementation-defined behavior: copy 32 bit word even if not word-aligned in memory
                 memcpy(registers + *rA, memory + registers[*rB], 4);
                 break;
 
-            case 0x0E:
+            case STW:
                 // current-implementation-defined behavior: copy 32 bit word even if not word-aligned in memory
                 memcpy(memory + registers[*rA], registers + *rB, 4);
                 break; 
 
-            case 0x0F:
+            case LDB:
                 memcpy(registers + *rA, memory + registers[*rB], 1);
                 break; 
 
-            case 0x10:
+            case STB:
                 memcpy(memory + registers[*rA], registers + *rB, 1);
 
             default:
@@ -129,6 +132,7 @@ int main(int argc, char** argv) {
         *pc += 4;
     }
 
+    // printf("%d\n", *sp);
     for(int i = 0; i < 32; i++) {
         printf("register %d: %d\n", i, (int32_t)registers[i]);
     }
