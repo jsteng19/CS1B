@@ -1,0 +1,89 @@
+set sp 400
+set at 25
+stw sp at
+set at 4
+add sp sp at
+set at 32
+stw sp at
+set pc 48
+set at 4
+add sp sp at
+ldw r1 sp
+brk
+set at 4
+add sp sp at
+add sp sp at
+stw sp r1
+add sp sp at
+stw sp r2
+add sp sp at
+stw sp r3
+add sp sp at
+stw sp r4
+add sp sp at
+stw sp r5
+add sp sp at
+stw sp r29
+add sp sp at
+set at 36
+sub sp sp at
+ldw r1 sp
+add sp sp at
+set r2 1
+tcs at r1 r2
+set r29 2
+ash at at r29
+set r29 4
+add at at r29
+add pc pc at
+set pc 164
+set pc 172
+set pc 180
+set r5 0
+set pc 280
+set r5 1
+set pc 280
+sub r1 r1 r2
+stw sp r1
+set at 4
+add sp sp at
+set at 208
+stw sp at
+set pc 48
+set at 4
+add sp sp at
+ldw r3 sp
+sub sp sp at
+sub sp sp at
+sub r1 r1 r2
+stw sp r1
+set at 4
+add sp sp at
+set at 256
+stw sp at
+set pc 48
+set at 4
+add sp sp at
+ldw r4 sp
+sub sp sp at
+sub sp sp at
+add r5 r4 r3
+set at 28
+sub at sp at
+stw at r5
+set at 4
+sub sp sp at
+ldw r29 sp
+sub sp sp at
+ldw r5 sp
+sub sp sp at
+ldw r4 sp
+sub sp sp at
+ldw r3 sp
+sub sp sp at
+ldw r2 sp
+sub sp sp at
+ldw r1 sp
+sub sp sp at
+sub sp sp at
+ldw pc sp

@@ -26,12 +26,13 @@ int main(int argc, char** argv) {
 
 
     char line[16];
+    char* delimiters = " \n";
     char* token;
     unsigned char* instruction = mcode;
     int instructiontype;
 
     while(fgets(line, sizeof(line), assembly)) {
-        token = strtok(line, " ");
+        token = strtok(line, delimiters);
         if(!strcmp(token, "nop")) {
             *instruction = NOP;
             instructiontype = 0;
@@ -108,27 +109,27 @@ int main(int argc, char** argv) {
         switch(instructiontype) {
         
             case 1:
-                token = strtok(NULL, " ");
+                token = strtok(NULL, delimiters);
                 instruction[1] = getRegister(token);
-                token = strtok(NULL, " ");
+                token = strtok(NULL, delimiters);
                 int16_t imm = (int16_t)atoi(token);
                 memcpy(instruction + 2, &imm, 2);
                 break;
                 
 
             case 2:
-                token = strtok(NULL, " ");
+                token = strtok(NULL, delimiters);
                 instruction[1] = getRegister(token);
-                token = strtok(NULL, " ");
+                token = strtok(NULL, delimiters);
                 instruction[2] = getRegister(token);
                 break;
                 
             case 3:
-                token = strtok(NULL, " ");
+                token = strtok(NULL, delimiters);
                 instruction[1] = getRegister(token);
-                token = strtok(NULL, " ");
+                token = strtok(NULL, delimiters);
                 instruction[2] = getRegister(token);
-                token = strtok(NULL, " ");
+                token = strtok(NULL, delimiters);
                 instruction[3] = getRegister(token);
                 break;
         }

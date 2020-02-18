@@ -25,8 +25,7 @@ int main(int argc, char** argv) {
 
     uint32_t registers[32] = {};
     uint32_t* pc = registers;
-    uint32_t* sp = registers + 31; 
-    *sp = size + 4; // Todo: find a way to avoid this
+    uint32_t* sp = registers + 31;
 
 
     while(memory[*pc + 4] != BRK) {
@@ -127,13 +126,11 @@ int main(int argc, char** argv) {
             default:
                 break;
         }
-
-        for(int i = 0; i < 32; i++) {
-            printf("register %d: %d\n", i, (int32_t)registers[i]);
-        }
-        printf("\n");
     }
 
+    for(int i = 0; i < 32; i++) {
+        printf("register %d: %d\n", i, (int32_t)registers[i]);
+    }
     // printf("%d\n", *sp);
     
     fclose(file);
